@@ -12,10 +12,19 @@ struct Dummy {
 	Dummy& operator=(Dummy&&) = delete;
 };
 
+struct VecCont {
+	const std::vector<int> a;
+	size_t size() const { return a.size(); }
+	VecCont(const std::vector<int>& a) : a(a) {}
+	VecCont(std::vector<int>&& a) : a(std::move(a)) {}
+	const int& operator[](const int idx) const { return a[idx]; }
+};
+
 using cta = const_ton<Dummy>;
 using cta = const_ton<Dummy>;
 using vcta = std::vector<const_ton<Dummy>>;
 using vi = std::vector<int>;
+using ctvi = const_ton<VecCont>;
 
 TEST_CASE("Simple assignment") {
 	int constexpr assigned_value = 4;
@@ -70,3 +79,65 @@ TEST_CASE("Vectors containing const ton") {
 	REQUIRE(v1[0]->a == 100);
 	REQUIRE(v1[1]->a == 102);
 }
+
+/*TEST_CASE("Const_ton containing vectors") {
+	vi v1;
+	v1.emplace_back(0);
+	v1.emplace_back(2);
+	VecCont vc{v1};
+	ctvi ctv1{vc};
+
+	THEN ("The perfect forwarding constructor does not modify its lvalue arguments.") {
+		REQUIRE(v1.size() == 2);
+		REQUIRE(v1[0] == 0);
+		REQUIRE(v1[1] == 2);
+		REQUIRE(vc.size() == 2);
+		REQUIRE(vc[0] == 0);
+		REQUIRE(vc[1] == 2);
+	}
+	THEN ("The vector inside const_ton now contains the right elements.") {
+		REQUIRE(ctv1->size() == 2);
+		REQUIRE((*ctv1)[0] == 0);
+		REQUIRE((*ctv1)[1] == 2);
+	}
+
+	v1[0] = 10;
+	v1[1] = 12;
+	VecCont vc2{std::move(v1)};
+	ctvi ctv2{std::move(vc)};
+	THEN ("The perfect forwarding constructor modifies its rvalue arguments.") {
+		REQUIRE(v1.size() == 0);
+		REQUIRE(vc.size() == 0);
+	}
+	THEN ("The vector inside const_ton now contains the right elements.") {
+		REQUIRE(ctv2->size() == 2);
+		REQUIRE((*ctv2)[0] == 10);
+		REQUIRE((*ctv2)[1] == 12);
+	}
+
+	SECTION("Copy assign const_ton<VecCont> to const_ton<VecCont>") {
+		ctv1 = ctv2;
+		THEN ("The source vector being assigned from remains the same.") {
+			REQUIRE(ctv2->size() == 2);
+			REQUIRE((*ctv2)[0] == 10);
+			REQUIRE((*ctv2)[1] == 12);
+		}
+		THEN ("The target vector being assigned to now is updated.") {
+			REQUIRE(ctv1->size() == 2);
+			REQUIRE((*ctv1)[0] == 10);
+			REQUIRE((*ctv1)[1] == 12);
+		}
+	}
+
+	SECTION("Move assign const_ton<VecCont> to const_ton<VecCont>") {
+		ctv1 = ctv2;
+		THEN ("The source vector being assigned from now is empty.") {
+			REQUIRE(ctv2->size() == 0);
+		}
+		THEN ("The vector inside const_ton now contains the right elements.") {
+			REQUIRE(ctv1->size() == 2);
+			REQUIRE((*ctv1)[0] == 10);
+			REQUIRE((*ctv1)[1] == 12);
+		}
+	}
+}*/

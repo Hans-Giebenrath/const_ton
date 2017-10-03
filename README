@@ -1,0 +1,8 @@
+const_ton is meant to contain a wrapper type with constant members. It then allows assigning the wrapper as a whole, again.
+
+It is a small experiment to look, whether the Rust assignment semantics could be mimiced in C++. For types with distinct move semantics (like containers, where a move assignment would prevent heap allocation and copying), this whole concept does not work (or only, if one ignores the constness of the containertype in the move constructor of the wrapped type, which is only ok if you know what you are doing.)
+
+The way it works, is that in its assignment operator, it first calls the destructor of the wrapped type, and then uses placement new to construct a new object in the place of the old one using the arguments, hence circumventing the const restriction on the wrapper type's elements.
+Also, for convenience, the constructor of const_ton can forward its arguments, also if they are itself contained in a const_ton.
+
+Probably this is not really useful, but this way I could dive into template trickery and look, how one nice aspect of Rust could (not) be ported to C++.

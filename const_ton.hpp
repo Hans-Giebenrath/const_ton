@@ -92,6 +92,7 @@ public:
 	const_ton& operator=(const_ton&& t) {
 		val.~T();
 		new(&val) T(std::move(t.val));
+		//t.~T();
 		return *this;
 	}
 
