@@ -23,28 +23,28 @@ private:
 	};
 
 	template<typename T2, typename = typename std::enable_if<!is_const_ton<T2>::value, void>::type>
-	static constexpr T&& forward(typename std::remove_reference<T>::type& t) noexcept
+	static constexpr T2&& forward(typename std::remove_reference<T2>::type& t) noexcept
 	{
-		return static_cast<T&&>(t);
+		return static_cast<T2&&>(t);
 	}
 
-	template<typename T2, typename = typename std::enable_if<!is_const_ton<T2>::value, void>::type>
-	static constexpr T&& forward(typename std::remove_reference<T>::type&& t) noexcept
+	/*template<typename T2, typename = typename std::enable_if<!is_const_ton<T2>::value, void>::type>
+	static constexpr T2&& forward(typename std::remove_reference<T2>::type&& t) noexcept
 	{
-		static_assert(!std::is_lvalue_reference<T>::value,
+		static_assert(!std::is_lvalue_reference<T2>::value,
 				"Can not forward an rvalue as an lvalue.");
-		return static_cast<T&&>(t);
-	}
+		return static_cast<T2&&>(t);
+	}*/
 
-	template<typename T2, typename A = typename T2::type, typename = typename std::enable_if<is_const_ton<T2>::value, void>::type>
+	template<typename T2, typename A = typename std::decay<T2>::type::type, typename = typename std::enable_if<is_const_ton<T2>::value, void>::type>
 	static constexpr A&& forward(typename std::remove_reference<T2>::type& t) noexcept {
-		  return std::forward<T2>(t).reference_to_element();
+		  return static_cast<A&&>(std::forward<T2>(t).reference_to_element());
 	}
 
-	template<typename T2, typename A = typename T2::type, typename = typename std::enable_if<is_const_ton<T2>::value, void>::type>
+	/*template<typename T2, typename A = typename std::decay<T2>::type::type, typename = typename std::enable_if<is_const_ton<T2>::value, void>::type>
 	static constexpr A&& forward(typename std::remove_reference<T2>::type&& t) noexcept {
 		  return std::forward<T2>(t).reference_to_element();
-	}
+	}*/
 
 	constexpr T& reference_to_element() & noexcept {
 		return val;
@@ -62,6 +62,14 @@ public:
 	const_ton(A&&... a) :
 		val(const_ton::forward<A>(a)...)
 	{}
+
+	const_ton(const const_ton& other) {
+		*this = other;
+	}
+
+	const_ton(const_ton&& other) {
+		*this = std::move(other);
+	}
 
 	static_assert(is_const_ton<const_ton<int>>::value);
 	static_assert(is_const_ton<const_ton<int>&>::value);
